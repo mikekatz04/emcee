@@ -15,11 +15,11 @@ class AboveBelowMove(Move):
     Performs correct transformation of LISA frame paramters:
     beta, iota, psi.
     beta' = -beta
-    iota' = pi - iota
-    psi' = pi - iota
+    inc' = pi - inc
+    psi' = pi - psi
 
     :param inds:
-        Dictionary with indices for beta, iota, psi.
+        Dictionary with indices for beta, inc, psi.
 
     """
     def __init__(self, ndim, inds, **kwargs):
@@ -29,7 +29,7 @@ class AboveBelowMove(Move):
 
     def transform(self, c):
         c[:,self.inds['beta']] = -c[:,self.inds['beta']]
-        c[:,self.inds['iota']] = np.pi - c[:,self.inds['iota']]
+        c[:,self.inds['inc']] = np.pi - c[:,self.inds['inc']]
         c[:,self.inds['psi']] = np.pi - c[:,self.inds['psi']]
         return c
 
