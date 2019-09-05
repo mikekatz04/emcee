@@ -60,7 +60,7 @@ class AboveBelowMove(Move):
 
         # Compute the lnprobs of the proposed position.
         new_log_probs, new_blobs = model.compute_log_prob_fn(q)
-        import pdb; pdb.set_trace()
+
         # Loop over the walkers and update them accordingly.
         lnpdiff = new_log_probs - state.log_prob + factors
         accepted = np.log(model.random.rand(nwalkers)) < lnpdiff
@@ -68,5 +68,7 @@ class AboveBelowMove(Move):
         # Update the parameters
         new_state = State(q, log_prob=new_log_probs, blobs=new_blobs)
         state = self.update(state, new_state, accepted)
+        if any(accepted):
+            print('jumped modes')
 
         return state, accepted
