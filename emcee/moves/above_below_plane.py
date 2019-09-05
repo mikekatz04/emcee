@@ -68,7 +68,5 @@ class AboveBelowMove(Move):
         # Update the parameters
         new_state = State(q, log_prob=new_log_probs, blobs=new_blobs)
         state = self.update(state, new_state, accepted)
-        if any(accepted):
-            print('jumped modes')
 
         return state, accepted
