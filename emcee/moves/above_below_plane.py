@@ -5,6 +5,7 @@ from __future__ import division, print_function
 import numpy as np
 
 from .move import Move
+from ..state import State
 
 __all__ = ["AboveBelowMove"]
 
@@ -22,9 +23,10 @@ class AboveBelowMove(Move):
         Dictionary with indices for beta, inc, psi.
 
     """
-    def __init__(self, ndim, inds, **kwargs):
+    def __init__(self, nwalkers, ndim, inds, **kwargs):
         self.inds = inds
         self.ndim = ndim
+        self.buffer = np.zeros((nwalkers, ndim))
         super(AboveBelowMove, self).__init__(**kwargs)
 
     def transform(self, c):
@@ -52,12 +54,13 @@ class AboveBelowMove(Move):
         if self.ndim is not None and self.ndim != ndim:
             raise ValueError("Dimension mismatch in proposal")
 
+        self.buffer[:] = state.coords[:]
         # Get the move-specific proposal.
-        q, factors = self.get_proposal(state.coords, model.random)
+        q, factors = self.get_proposal(self.buffer, model.random)
 
         # Compute the lnprobs of the proposed position.
         new_log_probs, new_blobs = model.compute_log_prob_fn(q)
-
+        import pdb; pdb.set_trace()
         # Loop over the walkers and update them accordingly.
         lnpdiff = new_log_probs - state.log_prob + factors
         accepted = np.log(model.random.rand(nwalkers)) < lnpdiff
