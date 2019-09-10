@@ -42,7 +42,7 @@ class AboveBelowMove(Move):
     def get_proposal(self, coords, random):
         import pdb; pdb.set_trace()
         jump = np.choice([0,1], size=self.nwalkers, replace=True)
-        new_coords = self.transform(coords)*(jump==1) + coords*(jump=0)
+        new_coords = self.transform(coords)*(jump==1) + coords*(jump==0)
         new_coords = new_coords + np.random.multivariate_normal(self.means, self.cov, size=new_coords.shape[0])
         return new_coords, np.zeros(coords.shape[0])
 
