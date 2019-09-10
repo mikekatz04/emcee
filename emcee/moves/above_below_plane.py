@@ -40,11 +40,9 @@ class AboveBelowMove(Move):
         return c
 
     def get_proposal(self, coords, random):
-        import pdb; pdb.set_trace()
         jump = np.random.choice([0,1], size=self.nwalkers, replace=True)
         new_coords = coords.copy()
         new_coords[jump==1] = self.transform(new_coords[jump==1])
-        new_coords = new_coords + np.random.multivariate_normal(self.means, self.cov, size=new_coords.shape[0])
         return new_coords, np.zeros(coords.shape[0])
 
     def propose(self, model, state):

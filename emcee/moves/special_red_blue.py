@@ -39,11 +39,15 @@ class SpecialRedBlueMove(Move):
                  nsplits=2,
                  randomize_split=True,
                  live_dangerously=False,
-                 ind_beta=8):
+                 ind_beta=8,
+                 hop_mode_prob=0.02,
+                 inds={'beta': 8, 'inc': 6, 'psi': 9}):
         self.nsplits = int(nsplits)
         self.live_dangerously = live_dangerously
         self.randomize_split = randomize_split
         self.ind_beta = ind_beta
+        self.hmp = hop_mode_prob
+        self.inds = inds
 
     def setup(self, coords):
         pass
@@ -51,6 +55,12 @@ class SpecialRedBlueMove(Move):
     def get_proposal(self, sample, complement, random):
         raise NotImplementedError("The proposal must be implemented by "
                                   "subclasses")
+
+    def transform(self, c):
+        c[:,self.inds['beta']] = -c[:,self.inds['beta']]
+        c[:,self.inds['inc']] = np.pi - c[:,self.inds['inc']]
+        c[:,self.inds['psi']] = np.pi - c[:,self.inds['psi']]
+        return c
 
     def propose(self, model, state):
         """Use the move to generate a proposal and compute the acceptance
@@ -73,13 +83,18 @@ class SpecialRedBlueMove(Move):
         # Run any move-specific setup.
         self.setup(state.coords)
 
+        orig_temp = state.coords.copy()
+        if self.hmp > 0.0:
+            import pdb; pdb.set_trace()
+            jump = np.random.choice([0,1], p=[1-self.hmp, self.hmp], size=self.nwalkers, replace=True)
+            if any(jump==1):
+                orig_temp[jump==1] = self.transform(orig_temp[jump==1])
+
         # Split the ensemble in half and iterate over these two halves.
         accepted = np.zeros(nwalkers, dtype=bool)
         all_inds = np.arange(nwalkers)
-        inds_mode = (0*(state.coords[:, self.ind_beta] >= 0.0)
-                     + 1*(state.coords[:, self.ind_beta] < 0.0))
-
-        orig_temp = state.coords.copy()
+        inds_mode = (0*(orig_temp[:, self.ind_beta] >= 0.0)
+                     + 1*(orig_temp[:, self.ind_beta] < 0.0))
 
         for split in range(self.nsplits):
             S1 = np.where(inds_mode == split)[0]
@@ -89,7 +104,7 @@ class SpecialRedBlueMove(Move):
             model.random.shuffle(S1)
             nwalkers_temp = len(S1)
             for num, ind in enumerate(S1):
-                temp_walkers = state.coords[S1]
+                temp_walkers = orig_temp[S1].copy()
 
                 # Get the move-specific proposal.
                 walkers_comp = np.asarray([temp_walkers[kk] for kk in range(nwalkers_temp)
