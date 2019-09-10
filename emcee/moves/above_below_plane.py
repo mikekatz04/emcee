@@ -30,7 +30,7 @@ class AboveBelowMove(Move):
         self.buffer = np.zeros((nwalkers, ndim))
         self.prob_jump_above_below = prob_jump_above_below
         self.cov = cov
-        self.means = np.zeros(nwalkers)
+        self.means = np.zeros(ndim)
         super(AboveBelowMove, self).__init__(**kwargs)
 
     def transform(self, c):
