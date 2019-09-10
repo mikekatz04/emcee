@@ -23,14 +23,10 @@ class AboveBelowMove(Move):
         Dictionary with indices for beta, inc, psi.
 
     """
-    def __init__(self, nwalkers, ndim, inds, cov, prob_jump_above_below=0.5, **kwargs):
+    def __init__(self, nwalkers, ndim, inds, **kwargs):
         self.inds = inds
         self.ndim = ndim
-        self.nwalkers = nwalkers
         self.buffer = np.zeros((nwalkers, ndim))
-        self.prob_jump_above_below = prob_jump_above_below
-        self.cov = cov
-        self.means = np.zeros(ndim)
         super(AboveBelowMove, self).__init__(**kwargs)
 
     def transform(self, c):
@@ -40,10 +36,7 @@ class AboveBelowMove(Move):
         return c
 
     def get_proposal(self, coords, random):
-        jump = np.random.choice([0,1], size=self.nwalkers, replace=True)
-        new_coords = coords.copy()
-        new_coords[jump==1] = self.transform(new_coords[jump==1])
-        return new_coords, np.zeros(coords.shape[0])
+        return self.transform(coords), np.zeros(coords.shape[0])
 
     def propose(self, model, state):
         """Use the move to generate a proposal and compute the acceptance
