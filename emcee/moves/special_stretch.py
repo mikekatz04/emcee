@@ -30,7 +30,5 @@ class SpecialStretchMove(SpecialRedBlueMove):
         draw_ind = random.randint(nwalkers_other)
         zz = ((self.a - 1.) * random.rand() + 1) ** 2. / self.a
         factors = (ndim - 1.) * np.log(zz)
-        if any(current_walker - other_walkers[draw_ind] > 25.0):
-            import pdb; pdb.set_trace()
         new_pos = other_walkers[draw_ind] + zz*(current_walker - other_walkers[draw_ind])
         return new_pos, factors
