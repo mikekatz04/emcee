@@ -86,7 +86,7 @@ class SpecialRedBlueMove(Move):
         orig_temp = state.coords.copy()
         if self.hmp > 0.0:
             import pdb; pdb.set_trace()
-            jump = np.random.choice([0,1], p=[1-self.hmp, self.hmp], size=self.nwalkers, replace=True)
+            jump = np.random.choice([0,1], p=[1-self.hmp, self.hmp], size=nwalkers, replace=True)
             if any(jump==1):
                 orig_temp[jump==1] = self.transform(orig_temp[jump==1])
 
