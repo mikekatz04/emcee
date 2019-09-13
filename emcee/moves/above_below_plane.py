@@ -23,16 +23,23 @@ class AboveBelowMove(Move):
         Dictionary with indices for beta, inc, psi.
 
     """
-    def __init__(self, nwalkers, ndim, inds, **kwargs):
+    def __init__(self, nwalkers, ndim, inds, hop_longtitude=True, **kwargs):
         self.inds = inds
         self.ndim = ndim
         self.buffer = np.zeros((nwalkers, ndim))
+        self.hop_longtitude = hop_longtitude
         super(AboveBelowMove, self).__init__(**kwargs)
 
     def transform(self, c):
-        c[:,self.inds['beta']] = -c[:,self.inds['beta']]
-        c[:,self.inds['inc']] = np.pi - c[:,self.inds['inc']]
+        c[:,self.inds['sin_beta']] = -c[:,self.inds['sin_beta']]
+        c[:,self.inds['cos_inc']] = -c[:,self.inds['cos_inc']]
         c[:,self.inds['psi']] = np.pi - c[:,self.inds['psi']]
+        if self.hop_longtitude:
+            jump_val = np.pi/2.*np.choice([0., 1., 2., 3,],
+            replace=True, size=c.shape[0])
+            c[:,self.inds['lambda']] = c[:,self.inds['lambda']]
+                                        + jump_val
+            c[:, self.inds['psi']] = c[:, self.inds['psi']] + jump_val
         return c
 
     def get_proposal(self, coords, random):
