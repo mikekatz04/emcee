@@ -28,7 +28,7 @@ class LongitudeMove(Move):
         self.ndim = ndim
         self.buffer = np.zeros((nwalkers, ndim))
         self.hop_longtitude = hop_longtitude
-        super(AboveBelowMove, self).__init__(**kwargs)
+        super(LongitudeMove, self).__init__(**kwargs)
 
     def transform(self, c):
         jump_val = np.pi/2.*np.choice([0., 1., 2., 3,],
