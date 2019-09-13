@@ -34,12 +34,6 @@ class AboveBelowMove(Move):
         c[:,self.inds['sin_beta']] = -c[:,self.inds['sin_beta']]
         c[:,self.inds['cos_inc']] = -c[:,self.inds['cos_inc']]
         c[:,self.inds['psi']] = np.pi - c[:,self.inds['psi']]
-        if self.hop_longtitude:
-            jump_val = np.pi/2.*np.choice([0., 1., 2., 3,],
-            replace=True, size=c.shape[0])
-            c[:,self.inds['lambda']] = c[:,self.inds['lambda']]
-                                        + jump_val
-            c[:, self.inds['psi']] = c[:, self.inds['psi']] + jump_val
         return c
 
     def get_proposal(self, coords, random):
