@@ -31,7 +31,7 @@ class LongitudeMove(Move):
         super(LongitudeMove, self).__init__(**kwargs)
 
     def transform(self, c):
-        jump_val = np.pi/2.*np.choice([0., 1., 2., 3,],
+        jump_val = np.pi/2.*np.random.choice([0., 1., 2., 3,],
             replace=True, size=c.shape[0])
         c[:,self.inds['lambda']] = c[:,self.inds['lambda']] + jump_val
         c[:, self.inds['psi']] = c[:, self.inds['psi']] + jump_val
