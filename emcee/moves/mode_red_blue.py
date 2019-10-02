@@ -94,7 +94,7 @@ class ModeRedBlueMove(Move):
             state.coords[:, 7] = state.coords[:,7] % (np.pi/2.)
             state.coords[:, 8] = np.abs(state.coords[:, 8])
             state.coords[:, 9] = self.psi_mode*(state.coords[:, 9] - np.pi/2.)
-            state.coords[:, 6] = np.abs(state.coords[:, 5])
+            state.coords[:, 6] = np.abs(state.coords[:, 6])
 
             # Get the two halves of the ensemble.
             sets = [state.coords[inds == j] for j in range(self.nsplits)]
