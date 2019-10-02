@@ -33,8 +33,8 @@ class LongitudeMove(Move):
     def transform(self, c):
         jump_val = np.pi/2.*np.random.choice([0., 1., 2., 3,],
             replace=True, size=c.shape[0])
-        c[:,self.inds['lambda']] = c[:,self.inds['lambda']] + jump_val
-        c[:, self.inds['psi']] = c[:, self.inds['psi']] + jump_val
+        c[:,self.inds['lambda']] = (c[:,self.inds['lambda']] + jump_val) % (2*np.pi)
+        c[:, self.inds['psi']] = (c[:, self.inds['psi']] + jump_val) % np.pi
         return c
 
     def get_proposal(self, coords, random):
@@ -66,6 +66,7 @@ class LongitudeMove(Move):
         # Loop over the walkers and update them accordingly.
         lnpdiff = new_log_probs - state.log_prob + factors
         accepted = np.log(model.random.rand(nwalkers)) < lnpdiff
+        import pdb; pdb.set_trace()
 
         # Update the parameters
         new_state = State(q, log_prob=new_log_probs, blobs=new_blobs)
