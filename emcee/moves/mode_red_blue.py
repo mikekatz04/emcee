@@ -46,10 +46,14 @@ class ModeRedBlueMove(Move):
         self.randomize_split = randomize_split
         self.long_mode = np.zeros(self.nwalkers, dtype=int)
         self.lat_mode = np.zeros(self.nwalkers, dtype=int)
+        self.psi_mode = np.zeros(self.nwalkers, dtype=int)
+        self.inc_mode = np.zeros(self.nwalkers, dtype=int)
 
     def setup(self, coords):
         self.long_mode = coords[:, 7] // (np.pi/2.)
         self.lat_mode = np.sign(coords[:, 8]).astype(int)
+        self.psi_mode = np.sign(coords[:, 9] - np.pi/2).astype(int)
+        self.inc_mode = np.sign(coords[:, 6]).astype(int)
 
     def get_proposal(self, sample, complement, random):
         raise NotImplementedError("The proposal must be implemented by "
@@ -89,6 +93,8 @@ class ModeRedBlueMove(Move):
 
             state.coords[:, 7] = state.coords[:,7] % (np.pi/2.)
             state.coords[:, 8] = np.abs(state.coords[:, 8])
+            state.coords[:, 9] = self.psi_mode*(state.coords[:, 9] - np.pi/2.)
+            state.coords[:, 6] = np.abs(state.coords[:, 5])
 
             # Get the two halves of the ensemble.
             sets = [state.coords[inds == j] for j in range(self.nsplits)]
@@ -98,8 +104,16 @@ class ModeRedBlueMove(Move):
             # Get the move-specific proposal.
             q, factors = self.get_proposal(s, c, model.random)
 
-            q[S1, 7] = self.lat_mode[S1]*q[S1, 7]
-            state.coords[:, 8] = state.coords[:,8]*self.lat_mode
+            q[S1, 7] = (self.long_mode[S1]*q[:, 7]) % (2*np.pi)
+            q[S1, 8] = self.lat_mode[S1]*q[:, 8]
+            q[S1, 9] = (self.psi_mode[S1]*q[:, 9]) + np.pi/2.
+            q[S1, 6] = self.inc_mode[S1]*q[:, 6]
+
+            state.coords[:, 7] = state.coords[:,7]*self.long_mode
+            state.coords[:, 8] = state.coords[:, 8]*self.lat_mode
+            state.coords[:, 9] = np.pi/2. + (self.psi_mode*state.coords[:, 9])
+            state.coords[:, 6] = state.coords[:, 6]*self.inc_mode
+
             # Compute the lnprobs of the proposed position.
             new_log_probs, new_blobs = model.compute_log_prob_fn(q)
 
@@ -109,8 +123,6 @@ class ModeRedBlueMove(Move):
                 lnpdiff = f + nlp - state.log_prob[j]
                 if lnpdiff > np.log(model.random.rand()):
                     accepted[j] = True
-            if stop:
-                import pdb; pdb.set_trace()
 
             new_state = State(q, log_prob=new_log_probs, blobs=new_blobs)
             state = self.update(state, new_state, accepted, S1)
