@@ -123,7 +123,7 @@ class ModeRedBlueMove(Move):
                 lnpdiff = f + nlp - state.log_prob[j]
                 if lnpdiff > np.log(model.random.rand()):
                     accepted[j] = True
-s
+
             new_state = State(q, log_prob=new_log_probs, blobs=new_blobs)
             state = self.update(state, new_state, accepted, S1)
 
