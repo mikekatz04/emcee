@@ -126,5 +126,5 @@ class ModeRedBlueMove(Move):
 
             new_state = State(q, log_prob=new_log_probs, blobs=new_blobs)
             state = self.update(state, new_state, accepted, S1)
-        import pdb; pdb.set_trace()
+
         return state, accepted
