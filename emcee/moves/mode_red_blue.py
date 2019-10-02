@@ -104,10 +104,10 @@ class ModeRedBlueMove(Move):
             # Get the move-specific proposal.
             q, factors = self.get_proposal(s, c, model.random)
 
-            q[S1, 7] = (self.long_mode[S1]*q[:, 7]) % (2*np.pi)
-            q[S1, 8] = self.lat_mode[S1]*q[:, 8]
-            q[S1, 9] = (self.psi_mode[S1]*q[:, 9]) + np.pi/2.
-            q[S1, 6] = self.inc_mode[S1]*q[:, 6]
+            q[:, 7] = (self.long_mode[S1]*q[:, 7]) % (2*np.pi)
+            q[:, 8] = self.lat_mode[S1]*q[:, 8]
+            q[:, 9] = (self.psi_mode[S1]*q[:, 9]) + np.pi/2.
+            q[:, 6] = self.inc_mode[S1]*q[:, 6]
 
             state.coords[:, 7] = state.coords[:,7]*self.long_mode
             state.coords[:, 8] = state.coords[:, 8]*self.lat_mode
