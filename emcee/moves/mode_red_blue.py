@@ -109,7 +109,7 @@ class ModeRedBlueMove(Move):
             q[:, 9] = (self.psi_mode[S1]*q[:, 9]) + np.pi/2.
             q[:, 6] = self.inc_mode[S1]*q[:, 6]
 
-            state.coords[:, 7] = state.coords[:,7]*self.long_mode
+            state.coords[:, 7] = state.coords[:,7] + (self.long_mode[S1]*np.pi/2)
             state.coords[:, 8] = state.coords[:, 8]*self.lat_mode
             state.coords[:, 9] = np.pi/2. + (self.psi_mode*state.coords[:, 9])
             state.coords[:, 6] = state.coords[:, 6]*self.inc_mode
