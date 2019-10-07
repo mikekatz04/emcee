@@ -28,6 +28,9 @@ class LongitudeMove(Move):
         self.ndim = ndim
         self.buffer = np.zeros((nwalkers, ndim))
         self.hop_longtitude = hop_longtitude
+        self.nsplits = kwargs.get('nsplits', 2)
+        self.nwalkers = nwalkers
+        self.inds_split = np.split(np.arange(nwalkers), 2)
         super(LongitudeMove, self).__init__(**kwargs)
 
     def transform(self, c):
@@ -61,7 +64,10 @@ class LongitudeMove(Move):
         q, factors = self.get_proposal(self.buffer, model.random)
 
         # Compute the lnprobs of the proposed position.
-        new_log_probs, new_blobs = model.compute_log_prob_fn(q)
+        new_log_probs = np.zeros(self.nwalkers)
+        for split in self.inds_split:
+            new_log_probs[split], new_blobs = model.compute_log_prob_fn(q[split])
+
 
         # Loop over the walkers and update them accordingly.
         lnpdiff = new_log_probs - state.log_prob + factors

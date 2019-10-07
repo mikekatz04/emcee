@@ -48,6 +48,8 @@ class ModeRedBlueMove(Move):
         self.lat_mode = np.zeros(self.nwalkers, dtype=int)
         self.psi_mode = np.zeros(self.nwalkers, dtype=int)
         self.inc_mode = np.zeros(self.nwalkers, dtype=int)
+        self.increment = 0
+        self.stop = False
 
     def setup(self, coords):
         self.long_mode = coords[:, 7] // (np.pi/2.)
@@ -88,8 +90,19 @@ class ModeRedBlueMove(Move):
             model.random.shuffle(inds)
         stop = False
 
+        self.increment += 1
+        if self.increment % 2000 == 0 and self.increment != 0:
+            import pdb; pdb.set_trace()
+
+        if self.stop:
+            import pdb; pdb.set_trace()
         for split in range(self.nsplits):
             S1 = inds == split
+
+            self.setup(state.coords)
+
+            old_coords = state.coords.copy()
+            old_logprob = state.log_prob.copy()
 
             state.coords[:, 7] = state.coords[:,7] % (np.pi/2.)
             state.coords[:, 8] = np.abs(state.coords[:, 8])
@@ -124,7 +137,12 @@ class ModeRedBlueMove(Move):
                 if lnpdiff > np.log(model.random.rand()):
                     accepted[j] = True
 
+            if self.increment % 10000 == 0 and self.increment != 0:
+                import pdb; pdb.set_trace()
             new_state = State(q, log_prob=new_log_probs, blobs=new_blobs)
             state = self.update(state, new_state, accepted, S1)
+            inds_c = np.where((state.coords[:, 7]> 4.0) & (state.coords[:, 7]< 6.0) & (state.log_prob > -100.0))[0]
+            if len(inds_c) > 0:
+                raise ValueError("bad happened again")
 
         return state, accepted

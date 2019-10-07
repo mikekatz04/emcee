@@ -7,6 +7,8 @@ import numpy as np
 from .special_move import Move
 from ..state import State
 
+import scipy.cluster.hierarchy as hcluster
+
 __all__ = ["RedBlueMove"]
 
 
@@ -40,14 +42,14 @@ class SpecialRedBlueMove(Move):
                  randomize_split=True,
                  live_dangerously=False,
                  ind_beta=8,
-                 hop_mode_prob=0.02,
-                 inds={'beta': 8, 'inc': 6, 'psi': 9}):
+                 ind_lambda=7,
+                 thresh=1.0):
         self.nsplits = int(nsplits)
         self.live_dangerously = live_dangerously
         self.randomize_split = randomize_split
         self.ind_beta = ind_beta
-        self.hmp = hop_mode_prob
-        self.inds = inds
+        self.ind_lambda = ind_lambda
+        self.thresh = thresh
 
     def setup(self, coords):
         pass
@@ -55,12 +57,6 @@ class SpecialRedBlueMove(Move):
     def get_proposal(self, sample, complement, random):
         raise NotImplementedError("The proposal must be implemented by "
                                   "subclasses")
-
-    def transform(self, c):
-        c[:,self.inds['beta']] = -c[:,self.inds['beta']]
-        c[:,self.inds['inc']] = np.pi - c[:,self.inds['inc']]
-        c[:,self.inds['psi']] = np.pi - c[:,self.inds['psi']]
-        return c
 
     def propose(self, model, state):
         """Use the move to generate a proposal and compute the acceptance
@@ -83,47 +79,41 @@ class SpecialRedBlueMove(Move):
         # Run any move-specific setup.
         self.setup(state.coords)
 
-        orig_temp = state.coords.copy()
-        if self.hmp > 0.0:
-            jump = np.random.choice([0,1], p=[1-self.hmp, self.hmp], size=nwalkers, replace=True)
-            if any(jump==1):
-                orig_temp[jump==1] = self.transform(orig_temp[jump==1])
-
         # Split the ensemble in half and iterate over these two halves.
         accepted = np.zeros(nwalkers, dtype=bool)
         all_inds = np.arange(nwalkers)
-        inds_mode = (0*(orig_temp[:, self.ind_beta] >= 0.0)
-                     + 1*(orig_temp[:, self.ind_beta] < 0.0))
+        clusters = hcluster.fclusterdata(state.coords[:, np.array([self.ind_beta, self.ind_lambda])], self.thresh, criterion="distance", method='weighted') - 1
 
-        for split in range(self.nsplits):
-            S1 = np.where(inds_mode == split)[0]
-            if len(S1) < 2:
-                continue
-
-            model.random.shuffle(S1)
-            nwalkers_temp = len(S1)
-            for num, ind in enumerate(S1):
-                temp_walkers = orig_temp[S1].copy()
+        for cluster in range(len(np.unique(clusters))):
+            inds_cluster = all_inds[clusters == cluster]
+            in_cluster = clusters[inds_cluster]
+            len_cluster = len(in_cluster)
+            if len_cluster < 3:
+                import pdb; pdb.set_trace()
+            cut = int(len_cluster/2)
+            inds = np.concatenate([np.ones((cut,)), np.zeros((len_cluster - cut))])
+            model.random.shuffle(inds)
+            for split in range(self.nsplits):
+                S1 = inds == split
+                # Get the two halves of the ensemble.
+                sets = [state.coords[inds_cluster][inds == j] for j in range(self.nsplits)]
+                s = sets[split]
+                c = sets[:split] + sets[split+1:]
 
                 # Get the move-specific proposal.
-                walkers_comp = np.asarray([temp_walkers[kk] for kk in range(nwalkers_temp)
-                                         if kk != num])
-
-                q, factors = self.get_proposal(temp_walkers[num], walkers_comp, model.random)
+                q, factors = self.get_proposal(s, c, model.random)
 
                 # Compute the lnprobs of the proposed position.
-                new_log_probs, new_blobs = model.compute_log_prob_fn(np.array([q]))
+                new_log_probs, new_blobs = model.compute_log_prob_fn(q)
 
                 # Loop over the walkers and update them accordingly.
-                lnpdiff = factors + new_log_probs.item() - state.log_prob[ind]
-                af = np.log(model.random.rand())
-                #if np.isinf(lnpdiff) and ind ==0:
-                #    import pdb; pdb.set_trace()
-                #    self.get_proposal(temp_walkers[num], walkers_comp, model.random)
-                if lnpdiff > af:
-                    accepted[ind] = True
-                    new_state = State(q, log_prob=new_log_probs, blobs=new_blobs)
-                    state = self.update(state, new_state, accepted, ind)
+                for i, (j, f, nlp) in enumerate(zip(
+                        all_inds[inds_cluster][S1], factors, new_log_probs)):
+                    lnpdiff = f + nlp - state.log_prob[j]
+                    if lnpdiff > np.log(model.random.rand()):
+                        accepted[j] = True
 
+                new_state = State(q, log_prob=new_log_probs, blobs=new_blobs)
+                state = self.update(state, new_state, accepted, inds_cluster[S1])
 
         return state, accepted

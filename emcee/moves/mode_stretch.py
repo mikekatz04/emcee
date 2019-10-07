@@ -20,7 +20,7 @@ class ModeStretchMove(ModeRedBlueMove):
         The stretch scale parameter. (default: ``2.0``)
 
     """
-    def __init__(self, nwalkers, a=2.0, **kwargs):
+    def __init__(self, nwalkers, long_inject, a=2.0, **kwargs):
         self.a = a
         self.nwalkers = nwalkers
         ModeRedBlueMove.__init__(self, **kwargs)

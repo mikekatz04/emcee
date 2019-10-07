@@ -3,12 +3,12 @@
 from __future__ import division, print_function
 
 import numpy as np
-from .red_blue import RedBlueMove
+from .special_red_blue import SpecialRedBlueMove
 
 __all__ = ["WalkMove"]
 
 
-class WalkMove(RedBlueMove):
+class WalkMove(SpecialRedBlueMove):
     """
     A `Goodman & Weare (2010)
     <http://msp.berkeley.edu/camcos/2010/5-1/p04.xhtml>`_ "walk move" with
@@ -33,5 +33,8 @@ class WalkMove(RedBlueMove):
         for i in range(Ns):
             inds = random.choice(Nc, s0, replace=False)
             cov = np.atleast_2d(np.cov(c[inds], rowvar=0))
-            q[i] = random.multivariate_normal(s[i], cov)
+            try:
+                q[i] = random.multivariate_normal(s[i], cov)
+            except ValueError:
+                import pdb; pdb.set_trace()
         return q, np.zeros(Ns, dtype=np.float64)
